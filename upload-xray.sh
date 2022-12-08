@@ -1,0 +1,2 @@
+token=$(curl -H "Content-Type: application/json" -X POST --data "@xray-cloud.json" https://xray.cloud.getxray.app/api/v2/authenticate | tr -d '"')
+curl -H "Content-Type: text/xml" -X POST -H "Authorization: Bearer $token"  --data "@build/test-results/xray-report.xml" 'https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=KHAN'

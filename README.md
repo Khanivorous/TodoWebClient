@@ -13,13 +13,12 @@ You can access the swagger ui at http://localhost:8080/swagger-ui/index.html whe
 
 ## Tests
 
-You will notice the Application tests uses a baseurl of `todo.baseurl=http://localhost:${port}` where the port is injected at runtime as the dynamic port of each mocked server.
+You will notice the Application tests uses a baseurl of `todo.baseurl=http://localhost:${port}` where the port is injected at runtime  with TestSocketUtils and added as the port of each mocked server.
 This allows us to run tests ensuring a port is normally free when running the tests.
 
 - [MockWebServerApplicationTests](src/test/kotlin/com/khanivorous/todowebclient/MockWebServerApplicationTests.kt)
   - This spins up the application and tests with mock responses by MockWebServer
-  - You will notice a limitation in this, as the server states cannot be reset between tests which causes problems in mock states
-    - There is currently an issue open with okhttp to add this feature which would be helpful for spring tests and dynamic ports: [okhttp issue](https://github.com/square/okhttp/pull/6736)
+  - There is currently an issue open with okhttp to add a reset state feature which would be helpful for spring tests, but shutdown helps too anyway: [okhttp issue](https://github.com/square/okhttp/pull/6736)
 - [MockWebSeverClientImplTest](src/test/kotlin/com/khanivorous/todowebclient/MockWebSeverClientImplTest.kt)
   - This tests the client directly using mock responses by MockWebServer
 - [WireMockApplicationTest](src/test/kotlin/com/khanivorous/todowebclient/WireMockApplicationTest.kt)

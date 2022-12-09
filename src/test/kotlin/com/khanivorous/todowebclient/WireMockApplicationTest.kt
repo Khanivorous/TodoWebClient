@@ -3,10 +3,11 @@ package com.khanivorous.todowebclient
 import app.getxray.xray.junit.customjunitxml.annotations.Requirement
 import app.getxray.xray.junit.customjunitxml.annotations.XrayTest
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock.*
+import com.github.tomakehurst.wiremock.client.WireMock
 import com.khanivorous.todowebclient.model.Todo
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -15,6 +16,7 @@ import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.context.TestPropertySource
+import org.springframework.test.util.TestSocketUtils
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.io.IOException
 
@@ -24,53 +26,42 @@ import java.io.IOException
 @TestPropertySource("classpath:application-test.properties")
 class WireMockApplicationTest {
 
-    @LocalServerPort
-    var localServerPort = 0
-
-    @Autowired
-    private lateinit var testClient: WebTestClient
-
-
-    @BeforeEach
-    fun setUp() {
-        baseUrl = "http://localhost:$localServerPort"
-    }
-
-    @AfterEach
-    fun afterEach() {
-        wireMockServer!!.resetAll()
-    }
-
     companion object {
 
-        var baseUrl: String? = null
-
-        @JvmStatic
-        var wireMockServer: WireMockServer? = WireMockServer(0)
-
-        @JvmStatic
-        @BeforeAll
-        @Throws(IOException::class)
-        fun beforeAll() {
-            wireMockServer!!.start()
-        }
-
-        @JvmStatic
-        @AfterAll
-        @Throws(IOException::class)
-        fun afterAll() {
-            wireMockServer!!.shutdown()
-        }
+        private val wireMockServerPort =
+            TestSocketUtils.findAvailableTcpPort() //Springboot 2.x.x uses SocketUtils not TestSocketUtils
 
         @JvmStatic
         @DynamicPropertySource
         @Throws(IOException::class)
         fun properties(r: DynamicPropertyRegistry) {
             r.add("port") {
-                wireMockServer!!.port()
+                wireMockServerPort
             }
         }
 
+    }
+
+    @LocalServerPort
+    var localServerPort = 0
+
+    var baseUrl: String? = null
+
+    @Autowired
+    private lateinit var testClient: WebTestClient
+
+    var wireMockServer: WireMockServer? = null
+
+    @BeforeEach
+    fun setUp() {
+        baseUrl = "http://localhost:$localServerPort"
+        wireMockServer = WireMockServer(wireMockServerPort)
+        wireMockServer!!.start()
+    }
+
+    @AfterEach
+    fun tearDown() {
+        wireMockServer!!.shutdown()
     }
 
     @XrayTest(
@@ -89,11 +80,12 @@ class WireMockApplicationTest {
         val dummyResponse: String = this::class.java.classLoader.getResource("todo/todoResponse.json")!!.readText()
 
         wireMockServer!!.stubFor(
-            get(urlEqualTo("/posts/1"))
+            WireMock.get(WireMock.urlEqualTo("/posts/1"))
                 .willReturn(
-                    aResponse()
+                    WireMock.aResponse()
                         .withHeader("Content-Type", "application/json; charset=utf-8")
                         .withBody(dummyResponse)
+                        .withFixedDelay(4000)
                 )
         )
 
@@ -112,7 +104,43 @@ class WireMockApplicationTest {
     }
 
     @XrayTest(
-        key = "KHAN-2",
+        key = "KHAN-3",
+        summary = "Get Todo by id webclient timeout",
+        description = "This gets throws a timeout error"
+    )
+    @Requirement("KHAN-45", "KHAN-46")
+    @Throws(IOException::class)
+    @Test
+    fun todoByIdTimeout() {
+
+        println("wiremock port is " + wireMockServer!!.port())
+        println("local server port = $localServerPort")
+
+        val dummyResponse: String = this::class.java.classLoader.getResource("todo/todoResponse.json")!!.readText()
+
+        wireMockServer!!.stubFor(
+            WireMock.get(WireMock.urlEqualTo("/posts/1"))
+                .willReturn(
+                    WireMock.aResponse()
+                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withBody(dummyResponse)
+                        .withFixedDelay(5000)
+                )
+        )
+
+        val exception = assertThrows(IllegalStateException::class.java) {
+            testClient.get()
+                .uri("${baseUrl}/todo/1")
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+        }
+
+        assertEquals("Timeout on blocking read for 5000000000 NANOSECONDS", exception.message)
+
+    }
+
+    @XrayTest(
+        key = "KHAN-4",
         summary = "Get Todo by id error",
         description = "This checks the error when service returns 500"
     )
@@ -122,9 +150,9 @@ class WireMockApplicationTest {
     fun todoByIdError() {
 
         wireMockServer!!.stubFor(
-            get(urlEqualTo("/posts/2"))
+            WireMock.get(WireMock.urlEqualTo("/posts/2"))
                 .willReturn(
-                    aResponse()
+                    WireMock.aResponse()
                         .withStatus(500)
                 )
         )

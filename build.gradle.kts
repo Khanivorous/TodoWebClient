@@ -51,11 +51,12 @@ tasks.withType<KotlinCompile> {
 
 tasks.test {
     useJUnitPlatform() {
-        excludeTags ("wiremockapplication")
+        maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
+        excludeTags ("integration")
     }
     testLogging {
         events ("started", "skipped", "passed", "failed", "STANDARD_OUT", "STANDARD_ERROR")
-        showStackTraces = true
+        showExceptions = true
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
         debug {
             events ("started", "skipped", "passed", "failed", "STANDARD_OUT", "STANDARD_ERROR")
@@ -65,11 +66,27 @@ tasks.test {
 
 tasks.register<Test>("integrationTests") {
     useJUnitPlatform() {
-        includeTags ("wiremockapplication")
+        includeTags ("integration")
+        maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
     }
     testLogging {
         events ("started", "skipped", "passed", "failed", "STANDARD_OUT", "STANDARD_ERROR")
-        showStackTraces = true
+        showExceptions = true
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        debug {
+            events ("started", "skipped", "passed", "failed", "STANDARD_OUT", "STANDARD_ERROR")
+        }
+    }
+
+}
+
+tasks.register<Test>("allTests") {
+    useJUnitPlatform() {
+        maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
+    }
+    testLogging {
+        events ("started", "skipped", "passed", "failed", "STANDARD_OUT", "STANDARD_ERROR")
+        showExceptions = true
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
         debug {
             events ("started", "skipped", "passed", "failed", "STANDARD_OUT", "STANDARD_ERROR")

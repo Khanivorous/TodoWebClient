@@ -22,7 +22,7 @@ import java.io.IOException
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-@Tag("wiremockapplication")
+@Tag("integration")
 @TestPropertySource("classpath:application-test.properties")
 class WireMockApplicationTest {
 

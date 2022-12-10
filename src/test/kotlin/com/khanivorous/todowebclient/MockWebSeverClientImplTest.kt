@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import java.io.IOException
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 
 
@@ -41,10 +42,12 @@ class MockWebSeverClientImplTest {
 
         val dummyResponse: String = this::class.java.classLoader.getResource("todo/todoResponse.json")!!.readText()
 
+        val bites = dummyResponse.toByteArray(StandardCharsets.UTF_8).size.toLong()
+
         val mockResponse = MockResponse()
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .setBody(dummyResponse)
-            .throttleBody(16, 5, TimeUnit.SECONDS) //simulate network response
+            .throttleBody(bites, 5, TimeUnit.SECONDS) //simulate network response
 
         mockWebServer!!.enqueue(mockResponse)
 

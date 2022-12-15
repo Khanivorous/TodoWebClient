@@ -104,7 +104,7 @@ class WireMockApplicationTest {
             .accept(MediaType.APPLICATION_JSON)
             .exchange()
             .expectStatus()
-            .isOk()
+            .isOk
             .expectBody(Todo::class.java)
             .returnResult()
             .responseBody
@@ -128,7 +128,7 @@ class WireMockApplicationTest {
 
         val dummyResponse: String = this::class.java.classLoader.getResource("todo/todoResponse.json")!!.readText()
 
-        wireMockServer!!.stubFor(
+        wireMockServer.stubFor(
             WireMock.get(WireMock.urlEqualTo("/posts/1"))
                 .willReturn(
                     WireMock.aResponse()

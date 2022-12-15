@@ -94,7 +94,7 @@ class MockWebServerApplicationTest {
             .accept(MediaType.APPLICATION_JSON)
             .exchange()
             .expectStatus()
-            .isOk()
+            .isOk
             .expectBody(Todo::class.java)
             .returnResult()
             .responseBody
@@ -134,7 +134,7 @@ class MockWebServerApplicationTest {
             .accept(MediaType.APPLICATION_JSON)
             .exchange()
             .expectStatus()
-            .isOk()
+            .isOk
             .expectBody(Todo::class.java)
             .returnResult()
             .responseBody

@@ -19,21 +19,20 @@ import java.util.concurrent.TimeUnit
 
 class MockWebSeverClientImplTest {
 
-    private var mockWebServer: MockWebServer? = null
+    private val mockWebServer: MockWebServer = MockWebServer()
     private var serviceUnderTest: TodoClientImpl? = null
 
     @Throws(IOException::class)
     @BeforeEach
     fun setUp() {
-        mockWebServer = MockWebServer()
-        mockWebServer!!.start()
-        serviceUnderTest = TodoClientImpl(WebClient.create(mockWebServer!!.url("/").toString()))
+        mockWebServer.start()
+        serviceUnderTest = TodoClientImpl(WebClient.create(mockWebServer.url("/").toString()))
     }
 
     @Throws(IOException::class)
     @AfterEach
     fun tearDown() {
-        mockWebServer!!.shutdown()
+        mockWebServer.shutdown()
     }
 
     @Throws(IOException::class)
@@ -49,9 +48,9 @@ class MockWebSeverClientImplTest {
             .setBody(dummyResponse)
             .throttleBody(bites, 5, TimeUnit.SECONDS) //simulate network response
 
-        mockWebServer!!.enqueue(mockResponse)
+        mockWebServer.enqueue(mockResponse)
 
-        val response = serviceUnderTest!!.getTodoById(1)
+        val response = serviceUnderTest?.getTodoById(1)
 
         assertEquals(1, response!!.id)
         assertEquals("test body id 1", response.body)
@@ -77,15 +76,15 @@ class MockWebSeverClientImplTest {
             }
         }
 
-        mockWebServer!!.dispatcher = dispatcher
+        mockWebServer.dispatcher = dispatcher
 
 
-        val response = serviceUnderTest!!.getTodoById(1)
+        val response = serviceUnderTest?.getTodoById(1)
 
         assertEquals(1, response!!.id)
         assertEquals("test body id 1", response.body)
 
-        assertThrows(WebClientResponseException::class.java) { serviceUnderTest!!.getTodoById(2) }
+        assertThrows(WebClientResponseException::class.java) { serviceUnderTest?.getTodoById(2) }
     }
 
 

@@ -31,6 +31,8 @@ class WireMockApplicationTest {
         private val wireMockServerPort =
             TestSocketUtils.findAvailableTcpPort() //Springboot 2.x.x uses SocketUtils not TestSocketUtils
 
+        private val wireMockServer = WireMockServer(wireMockServerPort)
+
         @JvmStatic
         @DynamicPropertySource
         @Throws(IOException::class)
@@ -40,28 +42,36 @@ class WireMockApplicationTest {
             }
         }
 
+        @JvmStatic
+        @BeforeAll
+        fun beforeAll() {
+            wireMockServer.start()
+        }
+
+        @JvmStatic
+        @AfterAll
+        fun afterAll() {
+            wireMockServer.shutdown()
+        }
+
     }
 
     @LocalServerPort
-    var localServerPort = 0
+    private var localServerPort = 0
 
-    var baseUrl: String? = null
+    private var baseUrl: String? = null
 
     @Autowired
     private lateinit var testClient: WebTestClient
 
-    var wireMockServer: WireMockServer? = null
-
     @BeforeEach
     fun setUp() {
         baseUrl = "http://localhost:$localServerPort"
-        wireMockServer = WireMockServer(wireMockServerPort)
-        wireMockServer!!.start()
     }
 
     @AfterEach
     fun tearDown() {
-        wireMockServer!!.shutdown()
+        wireMockServer.resetAll()
     }
 
     @XrayTest(
@@ -74,12 +84,12 @@ class WireMockApplicationTest {
     @Test
     fun todoById() {
 
-        println("wiremock port is " + wireMockServer!!.port())
+        println("wiremock port is " + wireMockServer.port())
         println("local server port = $localServerPort")
 
         val dummyResponse: String = this::class.java.classLoader.getResource("todo/todoResponse.json")!!.readText()
 
-        wireMockServer!!.stubFor(
+        wireMockServer.stubFor(
             WireMock.get(WireMock.urlEqualTo("/posts/1"))
                 .willReturn(
                     WireMock.aResponse()
@@ -113,7 +123,7 @@ class WireMockApplicationTest {
     @Test
     fun todoByIdTimeout() {
 
-        println("wiremock port is " + wireMockServer!!.port())
+        println("wiremock port is " + wireMockServer.port())
         println("local server port = $localServerPort")
 
         val dummyResponse: String = this::class.java.classLoader.getResource("todo/todoResponse.json")!!.readText()
@@ -149,7 +159,7 @@ class WireMockApplicationTest {
     @Test
     fun todoByIdError() {
 
-        wireMockServer!!.stubFor(
+        wireMockServer.stubFor(
             WireMock.get(WireMock.urlEqualTo("/posts/2"))
                 .willReturn(
                     WireMock.aResponse()
@@ -165,6 +175,5 @@ class WireMockApplicationTest {
             .is5xxServerError
 
     }
-
 
 }

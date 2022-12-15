@@ -3,31 +3,38 @@ package com.khanivorous.todowebclient
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.khanivorous.todowebclient.service.TodoClientImpl
-import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import java.io.IOException
 
 class WireMockClientImplTest {
 
-    private var serviceUnderTest: TodoClientImpl? = null
-    private var wireMockServer: WireMockServer? = WireMockServer(0)
+    companion object {
 
-    @Throws(IOException::class)
-    @BeforeEach
-    fun setUp() {
-        wireMockServer!!.start()
-        serviceUnderTest = TodoClientImpl(WebClient.create(wireMockServer!!.baseUrl()))
+        private val wireMockServer: WireMockServer = WireMockServer(0)
+        private var serviceUnderTest: TodoClientImpl? = null
+
+        @JvmStatic
+        @BeforeAll
+        fun beforeAll() {
+            wireMockServer.start()
+            serviceUnderTest = TodoClientImpl(WebClient.create(wireMockServer.baseUrl()))
+        }
+
+        @JvmStatic
+        @AfterAll
+        fun afterAll() {
+            wireMockServer.shutdown()
+        }
     }
 
     @Throws(IOException::class)
     @AfterEach
     fun tearDown() {
-        wireMockServer!!.shutdown()
+        wireMockServer.resetAll()
     }
 
     @Throws(IOException::class)
@@ -36,7 +43,7 @@ class WireMockClientImplTest {
 
         val dummyResponse: String = this::class.java.classLoader.getResource("todo/todoResponse.json")!!.readText()
 
-        wireMockServer!!.stubFor(
+        wireMockServer.stubFor(
             get(urlEqualTo("/posts/1"))
                 .willReturn(
                     aResponse()
@@ -56,7 +63,7 @@ class WireMockClientImplTest {
     @Test
     fun todoByIdError() {
 
-        wireMockServer!!.stubFor(
+        wireMockServer.stubFor(
             get(urlEqualTo("/posts/2"))
                 .willReturn(
                     aResponse()

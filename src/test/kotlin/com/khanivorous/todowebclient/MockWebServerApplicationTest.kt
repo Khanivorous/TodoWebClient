@@ -30,7 +30,8 @@ class MockWebServerApplicationTest {
 
     companion object {
 
-        private val mockWebServerPort = TestSocketUtils.findAvailableTcpPort() //Springboot 2.x.x uses SocketUtils not TestSocketUtils
+        private val mockWebServerPort =
+            TestSocketUtils.findAvailableTcpPort() //Springboot 2.x.x uses SocketUtils not TestSocketUtils
 
         @JvmStatic
         @DynamicPropertySource
@@ -49,20 +50,19 @@ class MockWebServerApplicationTest {
     @Autowired
     private lateinit var testClient: WebTestClient
 
-    var mockWebServer: MockWebServer? = null
+    private val mockWebServer: MockWebServer = MockWebServer()
 
-    var baseUrl: String? = null
+    private var baseUrl: String? = null
 
     @BeforeEach
     fun setUp() {
         baseUrl = "http://localhost:$localServerPort"
-        mockWebServer = MockWebServer()
-        mockWebServer!!.start(mockWebServerPort)
+        mockWebServer.start(mockWebServerPort)
     }
 
     @AfterEach
     fun teardown() {
-        mockWebServer!!.shutdown()
+        mockWebServer.shutdown()
     }
 
 
@@ -70,7 +70,7 @@ class MockWebServerApplicationTest {
     @Test
     fun todoById() {
 
-        println("mock server port = " + mockWebServer!!.port)
+        println("mock server port = " + mockWebServer.port)
         println("local server port = $localServerPort")
 
         val dummyResponse: String = this::class.java.classLoader.getResource("todo/todoResponse.json")!!.readText()
@@ -87,7 +87,7 @@ class MockWebServerApplicationTest {
             }
         }
 
-        mockWebServer!!.dispatcher = dispatcher
+        mockWebServer.dispatcher = dispatcher
 
         val response = testClient.get()
             .uri("$baseUrl/todo/1")
@@ -115,7 +115,7 @@ class MockWebServerApplicationTest {
     @Test
     fun todoByIdMockServerEnqueue() {
 
-        println("mock server port = " + mockWebServer!!.port)
+        println("mock server port = " + mockWebServer.port)
         println("local server port = $localServerPort")
 
         val dummyResponse: String = this::class.java.classLoader.getResource("todo/todoResponse.json")!!.readText()
@@ -127,7 +127,7 @@ class MockWebServerApplicationTest {
             .setBody(dummyResponse)
             .throttleBody(bites, 5, TimeUnit.SECONDS)//simulate network response
 
-        mockWebServer!!.enqueue(mockResponse)
+        mockWebServer.enqueue(mockResponse)
 
         val response = testClient.get()
             .uri("$baseUrl/todo/1")
@@ -148,7 +148,7 @@ class MockWebServerApplicationTest {
     @Test
     fun todoByIdMockServerEnqueueFailTimeout() {
 
-        println("mock server port = " + mockWebServer!!.port)
+        println("mock server port = " + mockWebServer.port)
         println("local server port = $localServerPort")
 
         val dummyResponse: String = this::class.java.classLoader.getResource("todo/todoResponse.json")!!.readText()
@@ -160,7 +160,7 @@ class MockWebServerApplicationTest {
             .setBody(dummyResponse)
             .throttleBody(lessBites, 5, TimeUnit.SECONDS)//simulate network response
 
-        mockWebServer!!.enqueue(mockResponse)
+        mockWebServer.enqueue(mockResponse)
 
         val exception = assertThrows(IllegalStateException::class.java) {
             testClient.get()

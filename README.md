@@ -3,7 +3,7 @@ This is a simple spring client application written in `Kotlin`.
 It uses Webclient to do a client call to the https://jsonplaceholder.typicode.com endpoint
 and returns the Todo object at a given id.
 
-This project is designed to showcase the use of MockWebserver and Wiremock as options to test spring clients.
+This project is designed to showcase the use of MockWebserver and Wiremock as options to mock the real endpoint to test spring clients.
 
 ## Running the application
 If you want to run the app locally using docker, first, build the application jar using `gradle bootJar`, then
